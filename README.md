@@ -10,6 +10,31 @@ insightsd provides functionality that fall into 3 categories.
 * Uploading archives (or arbitrary payloads with a valid Content-Type)
 * Updating collection cores
 
+## Collection Modules
+
+Collection modules are file archives that contain code and data necessary to
+run a collection. They can be enabled or disabled interactively by a system
+operator via the DBus API, or statically by editing the insightsd configuration
+file (/etc/insightsd/insightsd.conf).
+
+A collection module contains:
+
+* config.ini: A config file that contains ancillary data about the collection
+  module (see sample below)
+* collect: An executable file that is the entrypoint to collection. This file
+  is executed by `insightsd` when a collection is initiated.
+
+A collection may contain any additional files or directories that will be made
+available to the `collect` program at runtime.
+
+### Sample config.ini
+[Collection]
+Name=foo
+AutoUpdateURL=http://cloud.foo/bar/var/lib/foo.egg
+ContentType=application/tar-gz
+
+## Code Architecture
+
 ### `lib/` - Go package implementing functional level behavior
 
 This package implements the bulk of the insightsd functionality. While it is a
@@ -36,11 +61,11 @@ the system DBus.
 
 Methods used to request collection execution and manage collection scheduling.
 
-* `Create` - registers a collection operation to be executed on the provided
+* `Enable` - registers a collection operation to be executed on the provided
   frequency.
 * `Show` - details about a current collection operation.
 * `Edit` - edit a collection operation.
-* `Delete` - deregisters a collection operation from the schedule.
+* `Disable` - deregisters a collection operation from the schedule.
 * `List` - get a list of scheduled collections.
 * `Collect` - trigger an ad-hoc collection execution.
 
@@ -54,10 +79,8 @@ Methods used to upload a payload to the platform.
 
 Methods used to request core update and scheduling.
 
-* `Create` - register a core update to be updated on the provided frequency.
 * `Show` - details about a core update.
 * `Edit` - edit a core update.
-* `Delete` - deregister a core update.
 * `List` - get a list of all registered core updates.
 * `Update` - trigger an ad-hoc check for updates for a given core update.
 
