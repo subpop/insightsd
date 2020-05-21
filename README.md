@@ -35,6 +35,14 @@ AutoUpdateURL=http://cloud.foo/bar/var/lib/foo.egg
 ContentType=application/tar-gz
 ```
 
+### Collection Module Index
+
+An index of available collection modules is available for fetch and parsing by
+insightsd. This index is visible to system administrators via the DBus API (and
+this via a client), with features that allow modules to be enabled or disabled.
+Enabled modules sync the module package (see above) to the host and run data
+collections on the specified interval.
+
 ## Code Architecture
 
 ### `lib/` - Go package implementing functional level behavior
