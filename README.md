@@ -28,10 +28,12 @@ A collection may contain any additional files or directories that will be made
 available to the `collect` program at runtime.
 
 ### Sample config.ini
+```
 [Collection]
 Name=foo
 AutoUpdateURL=http://cloud.foo/bar/var/lib/foo.egg
 ContentType=application/tar-gz
+```
 
 ## Code Architecture
 
