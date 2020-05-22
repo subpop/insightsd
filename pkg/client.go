@@ -93,6 +93,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if c.authType == authTypeBasic {
 		req.SetBasicAuth(c.username, c.password)
 	}
+	req.Header.Add("User-Agent", "insightsd/1")
 	return c.Client.Do(req)
 }
 
