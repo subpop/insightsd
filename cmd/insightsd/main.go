@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	log "github.com/sirupsen/logrus"
@@ -17,15 +19,10 @@ func main() {
 	flags := []cli.Flag{
 		&cli.StringFlag{Name: "config"},
 		&cli.StringFlag{Name: "log-level", Value: "error"},
-		altsrc.NewStringFlag(&cli.StringFlag{
-			Name: "base-url",
-		}),
-		altsrc.NewStringFlag(&cli.StringFlag{
-			Name: "username",
-		}),
-		altsrc.NewStringFlag(&cli.StringFlag{
-			Name: "password",
-		}),
+		altsrc.NewStringFlag(&cli.StringFlag{Name: "base-url"}),
+		altsrc.NewStringFlag(&cli.StringFlag{Name: "auth"}),
+		altsrc.NewStringFlag(&cli.StringFlag{Name: "username"}),
+		altsrc.NewStringFlag(&cli.StringFlag{Name: "password"}),
 	}
 
 	app := cli.NewApp()
@@ -37,9 +34,25 @@ func main() {
 		}
 		log.SetLevel(level)
 
-		client, err := insights.NewClientBasicAuth(c.String("base-url"), c.String("username"), c.String("password"))
-		if err != nil {
-			return cli.NewExitError(err, 1)
+		var client *insights.Client
+		switch strings.ToLower(c.String("auth")) {
+		case "basic":
+			client, err = insights.NewClientBasicAuth(c.String("base-url"),
+				c.String("username"),
+				c.String("password"))
+			if err != nil {
+				return cli.NewExitError(err, 1)
+			}
+		case "cert":
+			client, err = insights.NewClientCertAuth(c.String("base-url"),
+				c.String("ca-root"),
+				c.String("cert"),
+				c.String("key"))
+			if err != nil {
+				return cli.NewExitError(err, 1)
+			}
+		default:
+			return cli.NewExitError(fmt.Errorf("error: invalid value for 'auth': %v", c.String("auth")), 1)
 		}
 
 		server, err := internal.NewDBusServer(client)
