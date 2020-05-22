@@ -89,6 +89,10 @@ func NewClientCertAuth(baseURL, caRoot, certFile, keyFile string) (*Client, erro
 	return client, nil
 }
 
+// Do sends an HTTP request and returns an HTTP response, following policy
+// as configured on the client.
+//
+// See http.Client documentation for more details.
 func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if c.authType == authTypeBasic {
 		req.SetBasicAuth(c.username, c.password)
