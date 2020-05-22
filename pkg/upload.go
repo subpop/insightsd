@@ -15,6 +15,10 @@ import (
 	"path/filepath"
 )
 
+// Upload constructs a multi-part MIME body composed of the file contents of
+// file and some "canonical facts" collected about the system, creates an HTTP
+// request and uses the provided client to send the data to the Insights
+// platform.
 func Upload(client *Client, file string, collector string) error {
 	URL, err := url.Parse(client.baseURL)
 	if err != nil {
