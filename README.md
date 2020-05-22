@@ -45,7 +45,7 @@ collections on the specified interval.
 
 ## Code Architecture
 
-### `lib/` - Go package implementing functional level behavior
+### `pkg/` - Go package implementing functional level behavior
 
 This package implements the bulk of the insightsd functionality. While it is a
 public package that downstream Go projects can consume, its primary purpose is
@@ -61,11 +61,13 @@ a system daemon. It implements a few DBus interfaces and exports objects onto
 the system DBus for clients to interact with. `insightsd` is the main consumer
 of `lib/` and is the primary service with which clients should be interacting.
 
-### `svc/dbus` - DBus interfaces describing the various operations of insightsd
+### `internal/` - Go package implementing functionality unique to insightsd
 
-This package contains the XML interface files as well as the stub service source
-code files that `insightsd` uses to implement interfaces and export objects onto
-the system DBus.
+This package contains structures and functions that enable `cmd/insightsd`
+and/or `cmd/insights-exec`, but aren't necessarily useful to a consumer at the
+package level. For example, this package contains the XML interface files as
+well as the source code files that `insightsd` uses to implement interfaces and
+export objects onto the system DBus.
 
 #### Collector
 
@@ -94,7 +96,7 @@ Methods used to request core update and scheduling.
 * `List` - get a list of all registered core updates.
 * `Update` - trigger an ad-hoc check for updates for a given core update.
 
-### `svc/grpc` - gRPC interfaces implementing the various operations of insightsd
+### `pkg/grpc` - gRPC interfaces implementing the various operations of insightsd
 
 Much like the DBus interface, a gRPC interface can be vended, allowing clients
 to interact with `insightsd` over gRPC.
