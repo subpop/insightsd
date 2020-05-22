@@ -31,6 +31,7 @@ type Client struct {
 // the given username and password.
 func NewClientBasicAuth(baseURL, username, password string) (*Client, error) {
 	return &Client{
+		Client:   &http.Client{},
 		authType: authTypeBasic,
 		baseURL:  baseURL,
 		username: username,
@@ -42,6 +43,7 @@ func NewClientBasicAuth(baseURL, username, password string) (*Client, error) {
 // with the given CA root, and certificate key-pair.
 func NewClientCertAuth(baseURL, caRoot, certFile, keyFile string) (*Client, error) {
 	client := &Client{
+		Client:   &http.Client{},
 		authType: authTypeCert,
 		baseURL:  baseURL,
 	}
