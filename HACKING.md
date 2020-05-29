@@ -32,3 +32,36 @@ gdbus call --system \
     --method com.redhat.insightsd.Upload \
     "$HOME/insights-ic-rhel8-dev-thelio-20200521100458.tar.gz" "advisor"
 ```
+
+# Call Graphs
+
+Call graphs can be generated to provide a high-level overview of the interactions
+between packages.
+
+For basic call graphs, install `go-callvis` (`go get -u github.com/ofabry/go-callvis`) and run:
+
+```bash
+# Call graph of the main function of insightsd, up to calls into the insights package
+go-callvis -nostd -format png -file insightsd.main ./cmd/insightsd
+# Call graph of the insights package, as invoked by insightsd
+go-callvis -nostd -format png -file insightsd.insights -focus github.com/subpop/insightsd/pkg ./cmd/insightsd
+# Call graph of the main function of insights-exec, up to calls into the insights package
+go-callvis -nostd -format png -file insights-exec.main ./cmd/insights-exec
+# Call graph of the insights package, as invoked by insights-exec
+go-callvis -nostd -format png -file insights-exec.insights -focus github.com/subpop/insightsd/pkg ./cmd/insights-exec
+```
+
+For more detailed, interactive call graphs, install `callgraph` and `digraph`.
+
+```bash
+go get -u golang.org/x/tools/cmd/callgraph
+go get -u gilang.org/x/tools/cmd/digraph
+```
+
+Generate a call graph using `callgraph`, filter the resulting graph to
+exclude standard library calls and pipe the result into `digraph`. See the `-help`
+output of `digraph` for how to interact with the graph.
+
+```bash
+`callgraph -algo pta -format digraph ./cmd/insights-exec | grep github.com/subpop/insightsd | sort | uniq | digraph
+```
