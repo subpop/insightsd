@@ -26,6 +26,9 @@ You can install D-Feet to browse the bus objects in a graphical way, or use
 `gdbus` to send methods directly.
 
 ```bash
+gdbus introspect --system \
+    --dest com.redhat.insightsd \
+    --object-path /com/redhat/insightsd
 gdbus call --system \
     --dest com.redhat.insightsd \
     --object-path /com/redhat/insightsd \
