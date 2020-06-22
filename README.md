@@ -7,6 +7,8 @@ from a host.
 insightsd provides functionality that fall into 3 categories.
 
 * Scheduling and running collections
+  * This includes an optional redaction process over which the data of a
+    collection is subjected prior to being archived and prepared for an upload.
 * Uploading archives (or arbitrary payloads with a valid Content-Type)
 * Updating collection cores
 
@@ -20,7 +22,7 @@ file (/etc/insightsd/insightsd.conf).
 A collection module contains:
 
 * config.ini: A config file that contains ancillary data about the collection
-  module (see sample below)
+  module (see sample below).
 * collect: An executable file that is the entrypoint to collection. This file
   is executed by `insightsd` when a collection is initiated.
 
@@ -32,16 +34,33 @@ available to the `collect` program at runtime.
 [Collection]
 Name=foo
 AutoUpdateURL=http://cloud.foo/bar/var/lib/foo.egg
-ContentType=application/tar-gz
+Frequency=24h
 ```
 
-### Collection Module Index
+### Running a Collection
 
-An index of available collection modules is available for fetch and parsing by
-insightsd. This index is visible to system administrators via the DBus API (and
-thus via a client), with features that allow modules to be enabled or disabled.
-Enabled modules sync the module package (see above) to the host and run data
-collections on the specified interval.
+`insightsd` will invoke a collection module's `/collect` entrypoint, passing in
+a JSON object to its `stdin`. This JSON object defines parameters under which
+the colleciton module is expected to operate. Examples include the destination
+path to write collected data or files. A collection object must adhere to the
+parameters specified in the JSON object; failure to do so will result in a
+failed collection attempt.
+
+#### Sample JSON input
+
+```json
+{
+  "output_dir": "/tmp/insightsd.I1nyqpcgeX"
+}
+```
+
+### D-Bus Interface
+
+Most methods in the package library (see below) will map directly to a D-Bus
+method. This design is intentional; it makes the interactions between a client,
+a D-Bus server object, and the base library straightforward. For example, an
+`Upload` function defined in the package library will have a corresponding
+`Upload` D-Bus method, exported on the `com.redhat.insights1` D-Bus interface.
 
 ## Code Architecture
 
@@ -51,15 +70,15 @@ This package implements the bulk of the insightsd functionality. While it is a
 public package that downstream Go projects can consume, its primary purpose is
 to provide a testable interface to `insightsd` and `insights-exec`. For example,
 one could implement a custom uploader using the `insights.Upload()` functions.
-But it is recommended to interact with `insightsd` through one of the IPC
-interfaces or directly via `insights-exec`.
+But it is recommended to interact with `insightsd` through the D-Bus interface
+or directly via `insights-exec`.
 
 ### `cmd/insightsd` - System daemon
 
-This package is a program, `insightsd` that is intended to be run on a host as
-a system daemon. It implements a few DBus interfaces and exports objects onto
-the system DBus for clients to interact with. `insightsd` is the main consumer
-of `lib/` and is the primary service with which clients should be interacting.
+This package is a program (`insightsd`) that is intended to be run on a host as
+a system daemon. It implements a few D-Bus interfaces and exports objects onto
+the system D-Bus for clients to interact with. `insightsd` is the main consumer
+of `pkg/` and is the primary service with which clients should be interacting.
 
 ### `internal/` - Go package implementing functionality unique to insightsd
 
@@ -67,39 +86,7 @@ This package contains structures and functions that enable `cmd/insightsd`
 and/or `cmd/insights-exec`, but aren't necessarily useful to a consumer at the
 package level. For example, this package contains the XML interface files as
 well as the source code files that `insightsd` uses to implement interfaces and
-export objects onto the system DBus.
-
-#### Collector
-
-Methods used to request collection execution and manage collection scheduling.
-
-* `Enable` - registers a collection operation to be executed on the provided
-  frequency.
-* `Show` - details about a current collection operation.
-* `Edit` - edit a collection operation.
-* `Disable` - deregisters a collection operation from the schedule.
-* `List` - get a list of scheduled collections.
-* `Collect` - trigger an ad-hoc collection execution.
-
-#### Uploader
-
-Methods used to upload a payload to the platform.
-
-* `Upload` - initiate an upload.
-
-#### Updater
-
-Methods used to request core update and scheduling.
-
-* `Show` - details about a core update.
-* `Edit` - edit a core update.
-* `List` - get a list of all registered core updates.
-* `Update` - trigger an ad-hoc check for updates for a given core update.
-
-### `pkg/grpc` - gRPC interfaces implementing the various operations of insightsd
-
-Much like the DBus interface, a gRPC interface can be vended, allowing clients
-to interact with `insightsd` over gRPC.
+export objects onto the system D-Bus.
 
 ### `cmd/inctl` - CLI client to `insightsd`
 
